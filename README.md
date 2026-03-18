@@ -93,14 +93,6 @@ ATEM は Blackmagic Design社の登録商標です。
 pyinstaller / pkg でビルドしています。
 
 不安な方はソースコードから直接ビルドして
-ご使用ください（ビルド手順は以下参照）。
+ご使用ください（ビルド手順は上記参照）。
 
 SHA256チェックサムをReleasesページに記載しています。
-
-## 自分でビルドする場合
-
-# サーバー
-python -m PyInstaller --onefile bin/terop_server.py
-
-# ウォッチャー
-pkg bin/terop_watcher.js --targets node18-win-x64 --output terop_watcher.exe
