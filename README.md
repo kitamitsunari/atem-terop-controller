@@ -73,6 +73,14 @@ W, H         = 1920, 1080        # 出力画像サイズ
 - Pillow（HPND）
 - watchdog（Apache 2.0）
 - atem-connection（MIT）
+
+- ## 自分でビルドする場合
+
+# サーバー
+python -m PyInstaller --onefile bin/terop_server.py
+
+# ウォッチャー
+pkg bin/terop_watcher.js --targets node18-win-x64 --output terop_watcher.exe
 - pngjs（MIT）
 
 ## 免責事項
