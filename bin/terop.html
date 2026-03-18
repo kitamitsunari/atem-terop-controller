@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>テロップ送出コントローラー</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=DM+Mono:wght@400;500&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #07090f;
+    --bg2:       #0d1119;
+    --bg3:       #141a26;
+    --border:    #1e2840;
+    --border2:   #2a3550;
+    --amber:     #f5a623;
+    --amber-dim: #9b6a16;
+    --red:       #e03c3c;
+    --green:     #2ecc71;
+    --blue:      #2e86de;
+    --text:      #d8e0f0;
+    --text-dim:  #5a6a8a;
+    --mono:      'DM Mono', monospace;
+    --sans:      'Barlow Condensed', sans-serif;
+    --ja:        'Noto Sans JP', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--ja);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 0 60px;
+  }
+
+  /* ===== HEADER ===== */
+  header {
+    width: 100%;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 32px;
+  }
+  .logo-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 10px var(--amber);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  header h1 {
+    font-family: var(--sans);
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--amber);
+    text-transform: uppercase;
+  }
+  .header-sub {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+  #status-indicator {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    display: inline-block;
+    margin-right: 6px;
+    transition: all .3s;
+  }
+  #status-indicator.ok   { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  #status-indicator.err  { background: var(--red);   box-shadow: 0 0 8px var(--red); }
+
+  /* ===== MAIN LAYOUT ===== */
+  main {
+    width: 100%;
+    max-width: 1100px;
+    padding: 32px 24px 0;
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 24px;
+    align-items: start;
+  }
+
+  /* ===== PANEL ===== */
+  .panel {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .panel-header {
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .panel-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+  .step-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--amber);
+    background: rgba(245,166,35,.12);
+    border: 1px solid var(--amber-dim);
+    border-radius: 4px;
+    padding: 2px 7px;
+  }
+  .panel-body { padding: 20px 18px; }
+
+  /* ===== TEXTAREA ===== */
+  .textarea-wrap { position: relative; }
+  textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--ja);
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.7;
+    padding: 16px;
+    resize: none;
+    outline: none;
+    transition: border-color .2s;
+    caret-color: var(--amber);
+  }
+  textarea:focus { border-color: var(--amber); }
+  .char-info {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    margin-top: 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .char-info span.warn { color: var(--red); }
+  .limit-hint {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+    font-family: var(--mono);
+  }
+
+  /* ===== POSITION GRID ===== */
+  .pos-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .pos-btn {
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    color: var(--text-dim);
+    font-family: var(--ja);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 14px 8px;
+    text-align: center;
+    transition: all .15s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .pos-btn .pos-icon { font-size: 18px; }
+  .pos-btn:hover { border-color: var(--border2); color: var(--text); }
+  .pos-btn.active {
+    background: rgba(245,166,35,.1);
+    border-color: var(--amber);
+    color: var(--amber);
+  }
+
+  /* ===== ICON SELECTOR ===== */
+  .icon-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .icon-btn {
+    background: var(--bg);
+    border: 2px solid var(--border2);
+    border-radius: 10px;
+    cursor: pointer;
+    padding: 12px 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    transition: all .15s;
+  }
+  .icon-btn .badge-ja {
+    font-family: var(--ja);
+    font-size: 14px;
+    font-weight: 900;
+    color: white;
+    padding: 3px 10px;
+    border-radius: 6px;
+    width: 100%;
+    text-align: center;
+  }
+  .icon-btn .badge-en {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+  .icon-btn:hover { transform: translateY(-1px); }
+  .icon-btn.active { border-color: white; }
+  .icon-btn[data-icon="topic"] .badge-ja { background: #1e78de; }
+  .icon-btn[data-icon="news"]  .badge-ja { background: #c82828; }
+  .icon-btn[data-icon="info"]  .badge-ja { background: #1ea05a; }
+  .icon-btn[data-icon="point"] .badge-ja { background: #d26400; }
+  .icon-btn[data-icon="topic"].active { border-color: #4aa0ff; }
+  .icon-btn[data-icon="news"].active  { border-color: #ff5a5a; }
+  .icon-btn[data-icon="info"].active  { border-color: #4ade80; }
+  .icon-btn[data-icon="point"].active { border-color: #fb923c; }
+
+  /* ===== PREVIEW ===== */
+  .preview-area {
+    background: #111;
+    border-radius: 8px;
+    aspect-ratio: 16/9;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  /* fake video background */
+  .preview-area::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 30% 40%, rgba(40,60,100,.6) 0%, transparent 60%),
+      radial-gradient(ellipse at 70% 60%, rgba(20,40,80,.5) 0%, transparent 50%),
+      linear-gradient(160deg, #0a1020 0%, #151c2e 100%);
+  }
+  .preview-label {
+    position: absolute;
+    top: 8px; left: 10px;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: rgba(255,255,255,.3);
+    letter-spacing: 1px;
+  }
+  /* terop overlay */
+  #preview-terop {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: rgba(8,12,24,.85);
+    border-radius: 6px;
+    overflow: hidden;
+    padding: 6px 10px 6px 0;
+    transition: all .3s ease;
+    max-width: 80%;
+    backdrop-filter: blur(4px);
+  }
+  #preview-terop.hidden { opacity: 0; }
+  .preview-sidebar {
+    width: 4px;
+    align-self: stretch;
+    flex-shrink: 0;
+    margin-right: 8px;
+    border-radius: 2px;
+    transition: background .2s;
+  }
+  #preview-icon-badge {
+    padding: 4px 8px;
+    border-radius: 6px;
+    margin-right: 8px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 44px;
+  }
+  .badge-preview-ja {
+    font-family: var(--ja);
+    font-size: 11px;
+    font-weight: 900;
+    color: white;
+  }
+  .badge-preview-en {
+    font-family: var(--mono);
+    font-size: 8px;
+    color: rgba(255,255,255,.7);
+    letter-spacing: .5px;
+  }
+  #preview-text {
+    font-family: var(--ja);
+    font-weight: 700;
+    font-size: 13px;
+    color: white;
+    white-space: pre-line;
+    line-height: 1.5;
+  }
+  .pos-top-left     { top: 12%;  left: 4%; }
+  .pos-top-right    { top: 12%;  right: 4%; }
+  .pos-bottom-left  { bottom: 12%; left: 4%; }
+  .pos-bottom-right { bottom: 12%; right: 4%; }
+
+  /* ===== SEND / CLEAR BUTTONS ===== */
+  .btn-row { display: flex; gap: 12px; margin-top: 4px; }
+
+  .btn-send {
+    flex: 1;
+    background: var(--amber);
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    font-family: var(--ja);
+    font-size: 22px;
+    font-weight: 900;
+    padding: 18px;
+    cursor: pointer;
+    letter-spacing: 4px;
+    transition: all .1s;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-send:hover  { background: #ffbf3f; }
+  .btn-send:active { transform: scale(.98); }
+  .btn-send.sending {
+    background: #a07010;
+    pointer-events: none;
+  }
+  .btn-send::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0);
+    transition: background .1s;
+  }
+  .btn-send:active::after { background: rgba(255,255,255,.15); }
+
+  .btn-clear {
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    font-family: var(--ja);
+    font-size: 14px;
+    font-weight: 700;
+    padding: 18px 20px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all .15s;
+  }
+  .btn-clear:hover { border-color: var(--red); color: var(--red); }
+
+  /* ===== SIDE PANEL ===== */
+  .side-panels { display: flex; flex-direction: column; gap: 16px; }
+
+  /* Config info */
+  .config-info {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 2;
+    word-break: break-all;
+  }
+  .config-info strong { color: var(--amber); }
+
+  /* Log */
+  #log {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    min-height: 80px;
+    max-height: 160px;
+    overflow-y: auto;
+    line-height: 2;
+  }
+  #log .log-ok  { color: var(--green); }
+  #log .log-err { color: var(--red); }
+  #log .log-ts  { color: var(--text-dim); margin-right: 6px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-dot"></div>
+  <h1>ATEM TEROP CONTROLLER</h1>
+  <div class="header-sub">
+    <span id="status-indicator"></span>
+    <span id="status-text">接続確認中…</span>
+  </div>
+</header>
+
+<main>
+  <!-- ===== LEFT COLUMN ===== -->
+  <div class="left-col" style="display:flex;flex-direction:column;gap:16px;">
+
+    <!-- STEP 1: テキスト入力 -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="step-badge">STEP 1</span>
+        <span class="panel-label">テロップ文字入力</span>
+      </div>
+      <div class="panel-body">
+        <div class="limit-hint">最大 <strong>20文字 × 2行</strong>（改行で2行目）</div>
+        <div class="textarea-wrap">
+          <textarea id="terop-text" rows="2"
+            placeholder="ここにトピックを入力&#10;（Enterで2行目）"
+            maxlength="41"
+          ></textarea>
+        </div>
+        <div class="char-info">
+          <span id="line1-count">1行目: 0/20文字</span>
+          <span id="line2-count">2行目: 0/20文字</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: 配置 -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="step-badge">STEP 2</span>
+        <span class="panel-label">画面配置</span>
+      </div>
+      <div class="panel-body">
+        <div class="pos-grid">
+          <button class="pos-btn" data-pos="top-left">
+            <span class="pos-icon">↖</span>上・左
+          </button>
+          <button class="pos-btn" data-pos="top-right">
+            <span class="pos-icon">↗</span>上・右
+          </button>
+          <button class="pos-btn active" data-pos="bottom-left">
+            <span class="pos-icon">↙</span>下・左
+          </button>
+          <button class="pos-btn" data-pos="bottom-right">
+            <span class="pos-icon">↘</span>下・右
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: アイキャッチ -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="step-badge">STEP 3</span>
+        <span class="panel-label">アイキャッチ</span>
+      </div>
+      <div class="panel-body">
+        <div class="icon-row">
+          <button class="icon-btn active" data-icon="topic">
+            <div class="badge-ja">話題</div>
+            <div class="badge-en">TOPIC</div>
+          </button>
+          <button class="icon-btn" data-icon="news">
+            <div class="badge-ja">速報</div>
+            <div class="badge-en">NEWS</div>
+          </button>
+          <button class="icon-btn" data-icon="info">
+            <div class="badge-ja">情報</div>
+            <div class="badge-en">INFO</div>
+          </button>
+          <button class="icon-btn" data-icon="point">
+            <div class="badge-ja">注目</div>
+            <div class="badge-en">POINT</div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 4: 送出 -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="step-badge">STEP 4</span>
+        <span class="panel-label">送出</span>
+      </div>
+      <div class="panel-body">
+        <div class="btn-row">
+          <button class="btn-send" id="btn-send">送　出！</button>
+          <button class="btn-clear" id="btn-clear">クリア</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===== RIGHT COLUMN ===== -->
+  <div class="side-panels">
+
+    <!-- プレビュー -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-label">プレビュー</span>
+      </div>
+      <div class="panel-body" style="padding:14px;">
+        <div class="preview-area" id="preview-area">
+          <div class="preview-label">PREVIEW</div>
+          <div id="preview-terop" class="pos-bottom-left hidden">
+            <div class="preview-sidebar" id="preview-sidebar"></div>
+            <div id="preview-icon-badge">
+              <div class="badge-preview-ja" id="pb-ja">話題</div>
+              <div class="badge-preview-en" id="pb-en">TOPIC</div>
+            </div>
+            <div id="preview-text"></div>
+          </div>
+        </div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);text-align:center;">
+          ※プレビューはイメージです
+        </div>
+      </div>
+    </div>
+
+    <!-- 設定情報 -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-label">設定情報</span>
+      </div>
+      <div class="panel-body">
+        <div class="config-info" id="config-info">読み込み中…</div>
+      </div>
+    </div>
+
+    <!-- 送出ログ -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-label">送出ログ</span>
+      </div>
+      <div class="panel-body">
+        <div id="log">—</div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+// ===== 状態 =====
+let state = {
+  text:     "",
+  position: "bottom-left",
+  icon:     "topic",
+};
+
+const ICON_COLORS = {
+  topic: "#1e78de",
+  news:  "#c82828",
+  info:  "#1ea05a",
+  point: "#d26400",
+};
+const ICON_LABELS = {
+  topic: {ja:"話題", en:"TOPIC"},
+  news:  {ja:"速報", en:"NEWS"},
+  info:  {ja:"情報", en:"INFO"},
+  point: {ja:"注目", en:"POINT"},
+};
+
+// ===== 文字カウント =====
+const textarea   = document.getElementById("terop-text");
+const line1count = document.getElementById("line1-count");
+const line2count = document.getElementById("line2-count");
+
+textarea.addEventListener("input", () => {
+  const raw = textarea.value;
+  // 改行は1つまで
+  const parts = raw.split("\n");
+  if (parts.length > 2) {
+    textarea.value = parts.slice(0,2).join("\n");
+  }
+  const lines = textarea.value.split("\n");
+  const l1 = (lines[0] || "").length;
+  const l2 = (lines[1] || "").length;
+  line1count.textContent = `1行目: ${l1}/20文字`;
+  line1count.className   = l1 > 20 ? "warn" : "";
+  line2count.textContent = `2行目: ${l2}/20文字`;
+  line2count.className   = l2 > 20 ? "warn" : "";
+  state.text = textarea.value;
+  updatePreview();
+});
+
+// ===== 配置ボタン =====
+document.querySelectorAll(".pos-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".pos-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    state.position = btn.dataset.pos;
+    updatePreview();
+  });
+});
+
+// ===== アイキャッチボタン =====
+document.querySelectorAll(".icon-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".icon-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    state.icon = btn.dataset.icon;
+    updatePreview();
+  });
+});
+
+// ===== プレビュー更新 =====
+function updatePreview() {
+  const terop = document.getElementById("preview-terop");
+  const sidebar = document.getElementById("preview-sidebar");
+  const pbJa  = document.getElementById("pb-ja");
+  const pbEn  = document.getElementById("pb-en");
+  const badge = document.getElementById("preview-icon-badge");
+  const txt   = document.getElementById("preview-text");
+
+  const color = ICON_COLORS[state.icon];
+  sidebar.style.background   = color;
+  badge.style.background     = color;
+  pbJa.textContent  = ICON_LABELS[state.icon].ja;
+  pbEn.textContent  = ICON_LABELS[state.icon].en;
+  txt.textContent   = state.text || "";
+
+  // 位置クラス
+  terop.className = ""; // reset
+  const posClass = {
+    "top-left":     "pos-top-left",
+    "top-right":    "pos-top-right",
+    "bottom-left":  "pos-bottom-left",
+    "bottom-right": "pos-bottom-right",
+  }[state.position];
+  terop.classList.add(posClass);
+  if (!state.text) {
+    terop.classList.add("hidden");
+  }
+}
+
+// ===== 送出ボタン =====
+document.getElementById("btn-send").addEventListener("click", async () => {
+  if (!state.text.trim()) {
+    addLog("error", "テキストが入力されていません");
+    return;
+  }
+  const btn = document.getElementById("btn-send");
+  btn.classList.add("sending");
+  btn.textContent = "送出中…";
+  try {
+    const res = await fetch("/generate", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        text:     state.text,
+        position: state.position,
+        icon:     state.icon,
+      }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      addLog("ok", `送出完了 [${state.position}/${state.icon}] "${state.text.replace(/\n/g," / ")}"`);
+      setStatus("ok");
+    } else {
+      addLog("error", data.error || "エラー");
+    }
+  } catch(e) {
+    addLog("error", "サーバーエラー: " + e.message);
+    setStatus("err");
+  } finally {
+    btn.classList.remove("sending");
+    btn.textContent = "送　出！";
+  }
+});
+
+// ===== クリアボタン =====
+document.getElementById("btn-clear").addEventListener("click", async () => {
+  try {
+    await fetch("/clear", { method: "POST" });
+    addLog("ok", "テロップをクリアしました");
+  } catch(e) {
+    addLog("error", "クリアエラー: " + e.message);
+  }
+});
+
+// ===== ログ =====
+function addLog(type, msg) {
+  const log = document.getElementById("log");
+  const ts  = new Date().toTimeString().slice(0,8);
+  const div = document.createElement("div");
+  div.innerHTML = `<span class="log-ts">${ts}</span><span class="log-${type === 'ok' ? 'ok' : 'err'}">${msg}</span>`;
+  log.prepend(div);
+  // 最大20件
+  while (log.children.length > 20) log.removeChild(log.lastChild);
+}
+
+// ===== ステータス =====
+function setStatus(state) {
+  const el = document.getElementById("status-indicator");
+  const tx = document.getElementById("status-text");
+  if (state === "ok")  { el.className = "ok";  tx.textContent = "サーバー接続中"; }
+  if (state === "err") { el.className = "err"; tx.textContent = "接続エラー"; }
+}
+
+// ===== 設定情報取得 =====
+async function loadConfig() {
+  try {
+    const res  = await fetch("/config");
+    const data = await res.json();
+    document.getElementById("config-info").innerHTML =
+      `<strong>出力フォルダ</strong><br>${data.watch_folder}<br>` +
+      `<strong>ファイル名</strong><br>${data.output_file}<br>` +
+      `<strong>文字制限</strong> ${data.max_chars}文字 × ${data.max_lines}行`;
+    setStatus("ok");
+  } catch(e) {
+    document.getElementById("config-info").textContent = "設定取得失敗";
+    setStatus("err");
+  }
+}
+
+loadConfig();
+updatePreview();
+</script>
+</body>
+</html>
