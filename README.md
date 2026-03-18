@@ -87,6 +87,16 @@ pkg bin/terop_watcher.js --targets node18-win-x64 --output terop_watcher.exe
 本ソフトウェアはBlackmagic Design社の公式製品ではありません。
 ATEM は Blackmagic Design社の登録商標です。
 
+## セキュリティについて
+
+配布しているexeファイルはソースコードから
+pyinstaller / pkg でビルドしています。
+
+不安な方はソースコードから直接ビルドして
+ご使用ください（ビルド手順は以下参照）。
+
+SHA256チェックサムをReleasesページに記載しています。
+
 ## 自分でビルドする場合
 
 # サーバー
