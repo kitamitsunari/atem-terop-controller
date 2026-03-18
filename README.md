@@ -1,4 +1,4 @@
-# テロップ送出システム
+# ATEM Mini pro テロップ送出システム
 
 インタビュー映像などにリアルタイムでトピックテロップを重ねるためのツールです。
 
@@ -67,3 +67,14 @@ W, H         = 1920, 1080        # 出力画像サイズ
 ```
 
 アイキャッチの文言・色も `ICONS` 辞書で自由に変更できます。
+
+## 依存ライブラリ
+- Flask（BSD）
+- Pillow（HPND）
+- watchdog（Apache 2.0）
+- atem-connection（MIT）
+- pngjs（MIT）
+
+## 免責事項
+本ソフトウェアはBlackmagic Design社の公式製品ではありません。
+ATEM は Blackmagic Design社の登録商標です。
