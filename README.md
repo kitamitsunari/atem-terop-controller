@@ -74,7 +74,7 @@ W, H         = 1920, 1080        # 出力画像サイズ
 - watchdog（Apache 2.0）
 - atem-connection（MIT）
 
-- ## 自分でビルドする場合
+## 自分でビルドする場合
 
 # サーバー
 python -m PyInstaller --onefile bin/terop_server.py
