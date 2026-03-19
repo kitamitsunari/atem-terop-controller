@@ -3,7 +3,7 @@
 Anthropic の AI アシスタント Claude とのペアプログラミングで開発しました。
 
 ## すぐ使いたい方
-Releases（画面右側）から`atem-terop-controller-v1.0.0.zip`をダウンロードしてください。
+Releasesから`atem-terop-controller-v1.0.0.zip`をダウンロードしてください。
 
 ## ファイル構成
 
