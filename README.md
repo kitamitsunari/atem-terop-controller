@@ -2,6 +2,9 @@
 
 インタビュー映像などにリアルタイムでトピックテロップを重ねるためのツールです。
 
+## すぐ使いたい方
+Releases（画面右側）から、`atem-terop-controller-v1.0.0.zip`をダウンロードしてください。
+
 ## ファイル構成
 
 ```
@@ -47,13 +50,13 @@ python terop_watcher.py --atem 192.168.x.x
 2. 「送出！」ボタンを押す
 3. `terop_output/terop_current.png` が自動生成・更新される
 4. ウォッチャーがATEMのメディアプールに自動転送
-5. ATEM Software Control のアップストリームキーヤーで表示ON
+5. ATEM Software Control のアップストリームキーヤーまたはDSKで表示ON
 
 ## ATEMのキーヤー設定
 
-- キー種類: **ルーマキー** または **リニアキー**
-- Fill Source: terop_current.pngが入っているINPUT（またはMedia Player 1）
-- Key Source: 同上
+- キー種類: **ルマキー** または **リニアキー** または **DSK 1(ダウンストリームキー)**
+- フィルソース: Media Player 1
+- キーソース:  Media Player 1 key (DSK 1 の場合）
 - αチャネル付きPNGを使用するため、背景は自動的に透過されます
 
 ## カスタマイズ
