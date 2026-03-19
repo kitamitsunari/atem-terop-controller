@@ -1,9 +1,9 @@
-# ATEM Mini pro テロップ送出システム
-
+## ATEM Mini pro テロップ送出システム
 インタビュー映像などにリアルタイムでトピックテロップを重ねるためのツールです。
+Anthropic の AI アシスタント Claude とのペアプログラミングで開発しました。
 
 ## すぐ使いたい方
-Releases（画面右側）から、`atem-terop-controller-v1.0.0.zip`をダウンロードしてください。
+Releases（画面右側）から`atem-terop-controller-v1.0.0.zip`をダウンロードしてください。
 
 ## ファイル構成
 
