@@ -21,7 +21,7 @@ echo.
 
 start "TEROP SERVER" cmd /k "bin\terop_server.exe"
 timeout /t 3 /nobreak > nul
-start "ATEM WATCHER" cmd /k "bin\terop_watcher.exe --atem 192.168.10.40"
+start "ATEM WATCHER" cmd /k "bin\terop_watcher.exe --atem "%ATEM_IP%"
 
 echo.
 echo   OK! Open browser: http://localhost:5050
