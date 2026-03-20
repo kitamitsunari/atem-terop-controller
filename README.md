@@ -3,7 +3,7 @@
 Anthropic の AI アシスタント Claude とのペアプログラミングで開発しました。
 
 ## すぐ使いたい方
-Releasesから`ATEM_Terop_V1.0.1.zip`をダウンロードしてください。
+Releasesから`ATEM_Terop_V1.0.2.zip`をダウンロードしてください。
 
 ## ファイル構成
 
