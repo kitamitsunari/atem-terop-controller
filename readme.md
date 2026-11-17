@@ -31,3 +31,8 @@ Node.js や `node_modules`、Python などのランタイム環境を一切必�
 atem-terop-controller/
 ├── terop_pusher.exe    # 起動・Web配信・ATEM転送を担う単体実行ファイル（必須・約22MB）
 └── terop_maker.html    # テロップ作成UI（任意：同梱時はローカル完結、省略時は [https://aterop.mkita.com](https://aterop.mkita.com) を使用）
+
+## 開発クレジット
+
+- **初期プロトタイプ設計・着手:** Claude
+- **Node.js SEA 単体バイナリ化・最適化・UI改修（最新版）:** Gemini
