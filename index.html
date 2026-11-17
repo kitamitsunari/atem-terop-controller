@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ATEM TEROP CONTROLLER</title>
+<style>
+  :root {
+    --bg:        #07090f;
+    --bg2:       #0d1119;
+    --bg3:       #141a26;
+    --border:    #1e2840;
+    --border2:   #2a3550;
+    --amber:     #f5a623;
+    --amber-dim: #9b6a16;
+    --red:       #e03c3c;
+    --green:     #2ecc71;
+    --blue:      #2e86de;
+    --text:      #d8e0f0;
+    --text-dim:  #6e7f9f;
+    --mono:      'Consolas', 'Courier New', monospace;
+    --sans:      'Segoe UI', 'Arial Narrow', sans-serif;
+    --ja:        'Noto Sans JP', 'Yu Gothic UI', 'Meiryo', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--ja);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 0 60px;
+  }
+
+  /* ===== HEADER ===== */
+  header {
+    width: 100%;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 28px;
+  }
+  .logo-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 10px var(--amber);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  header h1 {
+    font-family: var(--sans);
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--amber);
+    text-transform: uppercase;
+  }
+  .header-sub {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 999px;
+    padding: 4px 12px;
+  }
+  #status-indicator {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    transition: all .3s;
+  }
+  #status-indicator.ok   { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  #status-indicator.warn { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+  #status-indicator.err  { background: var(--red);   box-shadow: 0 0 8px var(--red); }
+
+  /* ===== MAIN LAYOUT ===== */
+  main {
+    width: 100%;
+    max-width: 1140px;
+    padding: 28px 24px 0;
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    main { grid-template-columns: 1fr; }
+  }
+
+  /* ===== PANEL ===== */
+  .panel {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .panel-header {
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .panel-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+  .step-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--amber);
+    background: rgba(245,166,35,.12);
+    border: 1px solid var(--amber-dim);
+    border-radius: 4px;
+    padding: 2px 7px;
+  }
+  .panel-action-btn {
+    margin-left: auto;
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--ja);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .panel-action-btn:hover {
+    border-color: var(--amber);
+    color: var(--amber);
+  }
+  .panel-action-btn.active {
+    background: rgba(245,166,35,.15);
+    border-color: var(--amber);
+    color: var(--amber);
+  }
+  .panel-body { padding: 18px; }
+
+  /* ===== TEXTAREA ===== */
+  textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--ja);
+    font-size: 21px;
+    font-weight: 700;
+    line-height: 1.6;
+    padding: 14px 16px;
+    resize: none;
+    outline: none;
+    transition: border-color .2s;
+    caret-color: var(--amber);
+  }
+  textarea:focus { border-color: var(--amber); }
+  .char-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .char-counts { display: flex; gap: 14px; }
+  .char-counts span.warn { color: var(--red); font-weight: 700; }
+
+  /* ===== POSITION GRID ===== */
+  .pos-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .pos-btn {
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    color: var(--text-dim);
+    font-family: var(--ja);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 12px 6px;
+    text-align: center;
+    transition: all .15s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .pos-btn .pos-icon { font-size: 16px; }
+  .pos-btn:hover { color: var(--text); border-color: #3d4d73; }
+  .pos-btn.active {
+    background: rgba(245,166,35,.12);
+    border-color: var(--amber);
+    color: var(--amber);
+  }
+
+  /* ===== ICON SELECTOR ===== */
+  .icon-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .icon-btn {
+    background: var(--bg);
+    border: 2px solid var(--border2);
+    border-radius: 10px;
+    cursor: pointer;
+    padding: 10px 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-height: 64px;
+    transition: all .15s;
+  }
+  .icon-btn:hover { transform: translateY(-1px); }
+  .icon-btn.active {
+    border-color: #ffffff;
+    box-shadow: 0 0 12px rgba(255,255,255,.15);
+  }
+  .icon-badge-preview {
+    width: 100%;
+    border-radius: 6px;
+    padding: 5px 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    color: #fff;
+  }
+  .badge-l1 {
+    font-family: var(--ja);
+    font-size: 14px;
+    font-weight: 900;
+    line-height: 1.2;
+  }
+  .badge-l2 {
+    font-family: var(--ja);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.2;
+    opacity: 0.92;
+    margin-top: 1px;
+  }
+
+  /* ===== ICON EDITOR DRAWER ===== */
+  .icon-editor {
+    display: none;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--border2);
+  }
+  .icon-editor.open { display: block; }
+  .editor-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .editor-card {
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .editor-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .editor-inputs {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .editor-inputs input[type="text"] {
+    width: 100%;
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 5px;
+    color: var(--text);
+    font-family: var(--ja);
+    font-size: 13px;
+    font-weight: 700;
+    padding: 5px 8px;
+    outline: none;
+  }
+  .editor-inputs input[type="text"]:focus {
+    border-color: var(--amber);
+  }
+  .editor-inputs input[type="color"] {
+    width: 34px;
+    height: 30px;
+    border: 1px solid var(--border2);
+    border-radius: 5px;
+    background: transparent;
+    cursor: pointer;
+    padding: 1px;
+    flex-shrink: 0;
+  }
+  .editor-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .btn-reset-icons {
+    background: transparent;
+    border: 1px solid var(--border2);
+    border-radius: 5px;
+    color: var(--text-dim);
+    font-family: var(--ja);
+    font-size: 11px;
+    padding: 4px 10px;
+    cursor: pointer;
+  }
+  .btn-reset-icons:hover {
+    border-color: var(--red);
+    color: var(--red);
+  }
+
+  /* ===== SEND / CLEAR / DOWNLOAD BUTTONS ===== */
+  .btn-row { display: flex; gap: 10px; }
+  .btn-send {
+    flex: 1;
+    background: var(--amber);
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    font-family: var(--ja);
+    font-size: 20px;
+    font-weight: 900;
+    padding: 16px;
+    cursor: pointer;
+    letter-spacing: 3px;
+    transition: all .1s;
+  }
+  .btn-send:hover  { background: #ffbf3f; }
+  .btn-send:active { transform: scale(.98); }
+  .btn-send.sending {
+    background: #a07010;
+    pointer-events: none;
+  }
+  .btn-sub {
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    font-family: var(--ja);
+    font-size: 13px;
+    font-weight: 700;
+    padding: 16px 14px;
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+  }
+  .btn-sub:hover { border-color: var(--amber); color: var(--amber); }
+  .btn-clear:hover { border-color: var(--red); color: var(--red); }
+
+  /* ===== SIDE PANEL & REAL CANVAS PREVIEW ===== */
+  .side-panels { display: flex; flex-direction: column; gap: 16px; }
+
+  .preview-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16/9;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border2);
+    /* 透過確認用市松模様 + ダーク映像模擬グラデーション */
+    background-color: #111827;
+    background-image:
+      linear-gradient(45deg, #1a2234 25%, transparent 25%),
+      linear-gradient(-45deg, #1a2234 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #1a2234 75%),
+      linear-gradient(-45deg, transparent 75%, #1a2234 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+  }
+  #terop-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .preview-badge {
+    position: absolute;
+    top: 8px; left: 8px;
+    background: rgba(7, 9, 15, 0.75);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: rgba(255,255,255,0.7);
+    pointer-events: none;
+  }
+
+  /* Bridge Config */
+  .bridge-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .bridge-input {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 6px 10px;
+    outline: none;
+  }
+  .bridge-input:focus { border-color: var(--amber); }
+
+  /* Log */
+  #log {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    min-height: 90px;
+    max-height: 180px;
+    overflow-y: auto;
+    line-height: 1.8;
+  }
+  #log .log-ok   { color: var(--green); }
+  #log .log-warn { color: var(--amber); }
+  #log .log-err  { color: var(--red); }
+  #log .log-ts   { color: var(--text-dim); margin-right: 6px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-dot"></div>
+  <h1>ATEM TEROP CONTROLLER</h1>
+  <div class="header-sub">
+    <div class="status-pill">
+      <span id="status-indicator"></span>
+      <span id="status-text">ブリッジ確認中…</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- ===== LEFT COLUMN ===== -->
+  <div style="display:flex;flex-direction:column;gap:16px;">
+
+    <!-- STEP 1: テキスト入力 -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="step-badge">STEP 1</span>
+        <span class="panel-label">テロップ文字入力</span>
+      </div>
+      <div class="panel-body">
+        <textarea id="terop-text" rows="2"
+          placeholder="ここにトピックを入力（Enterで2行目 / Ctrl+Enterで送出）"
+        ></textarea>
+        <div class="char-info">
+          <span>最大 20文字 × 2行</span>
+          <div class="char-counts">
+            <span id="line1-count">1行目: 0/20</span>
+            <span id="line2-count">2行目: 0/20</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: 配置 -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="step-badge">STEP 2</span>
+        <span class="panel-label">画面配置</span>
+      </div>
+      <div class="panel-body">
+        <div class="pos-grid">
+          <button class="pos-btn" data-pos="top-left">
+            <span class="pos-icon">↖</span>上・左
+          </button>
+          <button class="pos-btn" data-pos="top-right">
+            <span class="pos-icon">↗</span>上・右
+          </button>
+          <button class="pos-btn active" data-pos="bottom-left">
+            <span class="pos-icon">↙</span>下・左
+          </button>
+          <button class="pos-btn" data-pos="bottom-right">
+            <span class="pos-icon">↘</span>下・右
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: アイキャッチ -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="step-badge">STEP 3</span>
+        <span class="panel-label">アイキャッチ</span>
+        <button class="panel-action-btn" id="btn-toggle-editor">⚙ ラベル編集</button>
+      </div>
+      <div class="panel-body">
+        <div class="icon-row" id="icon-row"></div>
+
+        <!-- 編集ドロワー（最大3文字×2行・色変更） -->
+        <div class="icon-editor" id="icon-editor">
+          <div class="editor-grid" id="editor-grid"></div>
+          <div class="editor-footer">
+            <span>※各行最大3文字まで（2行目は空欄可）・自動保存</span>
+            <button class="btn-reset-icons" id="btn-reset-icons">初期値に戻す</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 4: 送出 -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="step-badge">STEP 4</span>
+        <span class="panel-label">送出・書き出し</span>
+      </div>
+      <div class="panel-body">
+        <div class="btn-row">
+          <button class="btn-send" id="btn-send">送 出！</button>
+          <button class="btn-sub" id="btn-download" title="透過PNGファイルとしてローカル保存">PNG保存</button>
+          <button class="btn-sub btn-clear" id="btn-clear">クリア</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===== RIGHT COLUMN ===== -->
+  <div class="side-panels">
+
+    <!-- 実画像プレビュー -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-label">出力画像プレビュー (1920×1080)</span>
+      </div>
+      <div class="panel-body" style="padding:14px;">
+        <div class="preview-wrapper">
+          <div class="preview-badge">ACTUAL CANVAS OUTPUT</div>
+          <canvas id="terop-canvas" width="1920" height="1080"></canvas>
+        </div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);text-align:center;margin-top:8px;">
+          ※送信される透過PNGと同じ原寸Canvasを縮小表示しています
+        </div>
+      </div>
+    </div>
+
+    <!-- ATEMブリッジ設定 -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-label">ATEMブリッジ接続先</span>
+      </div>
+      <div class="panel-body">
+        <div style="font-size:11px;color:var(--text-dim);">
+          ローカルWatcherのURL（未起動時はPNG保存で単体利用可能）
+        </div>
+        <div class="bridge-row">
+          <input type="text" id="bridge-url" class="bridge-input" value="http://localhost:5050">
+          <button class="panel-action-btn" id="btn-check-bridge" style="margin-left:0;">再確認</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 送出ログ -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-label">動作ログ</span>
+      </div>
+      <div class="panel-body">
+        <div id="log">—</div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+// ===== 定数・初期データ =====
+const STORAGE_KEY_ICONS  = "atem_terop_icons_v1";
+const STORAGE_KEY_BRIDGE = "atem_terop_bridge_v1";
+
+const DEFAULT_ICONS = [
+  { id: "slot0", line1: "話題", line2: "TOPIC", color: "#1e78de" },
+  { id: "slot1", line1: "速報", line2: "NEWS",  color: "#c82828" },
+  { id: "slot2", line1: "情報", line2: "INFO",  color: "#1ea05a" },
+  { id: "slot3", line1: "注目", line2: "POINT", color: "#d26400" },
+];
+
+const W = 1920;
+const H = 1080;
+const MAX_CHARS = 20;
+const MAX_LINES = 2;
+
+const POSITIONS = {
+  "top-left":     { x: 80,     y: 70,      anchor: "left"  },
+  "top-right":    { x: W - 80, y: 70,      anchor: "right" },
+  "bottom-left":  { x: 80,     y: H - 220, anchor: "left"  },
+  "bottom-right": { x: W - 80, y: H - 220, anchor: "right" },
+};
+
+// ===== 状態管理 =====
+let icons = loadIcons();
+let state = {
+  text:       "",
+  position:   "bottom-left",
+  iconIndex:  0,
+  bridgeOk:   false,
+  atemReady:  false,
+};
+
+function loadIcons() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY_ICONS);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length === 4) {
+        return parsed.map((item, idx) => ({
+          id: `slot${idx}`,
+          line1: String(item.line1 ?? "").slice(0, 3),
+          line2: String(item.line2 ?? "").slice(0, 3),
+          color: /^#[0-9a-fA-F]{6}$/.test(item.color) ? item.color : DEFAULT_ICONS[idx].color,
+        }));
+      }
+    }
+  } catch (e) {
+    console.warn("Failed to load saved icons:", e);
+  }
+  return JSON.parse(JSON.stringify(DEFAULT_ICONS));
+}
+
+function saveIcons() {
+  try {
+    localStorage.setItem(STORAGE_KEY_ICONS, JSON.stringify(icons));
+  } catch (e) {
+    console.warn("Failed to save icons:", e);
+  }
+}
+
+// ===== アイキャッチUI描画 =====
+function renderIconButtons() {
+  const row = document.getElementById("icon-row");
+  row.innerHTML = "";
+  icons.forEach((ic, idx) => {
+    const btn = document.createElement("button");
+    btn.className = "icon-btn" + (state.iconIndex === idx ? " active" : "");
+    btn.type = "button";
+
+    const badge = document.createElement("div");
+    badge.className = "icon-badge-preview";
+    badge.style.background = ic.color;
+
+    const l1 = document.createElement("div");
+    l1.className = "badge-l1";
+    l1.textContent = ic.line1 || " ";
+    badge.appendChild(l1);
+
+    if (ic.line2) {
+      const l2 = document.createElement("div");
+      l2.className = "badge-l2";
+      l2.textContent = ic.line2;
+      badge.appendChild(l2);
+    }
+
+    btn.appendChild(badge);
+    btn.addEventListener("click", () => {
+      state.iconIndex = idx;
+      renderIconButtons();
+      renderCanvas();
+    });
+    row.appendChild(btn);
+  });
+}
+
+function renderIconEditor() {
+  const grid = document.getElementById("editor-grid");
+  grid.innerHTML = "";
+  icons.forEach((ic, idx) => {
+    const card = document.createElement("div");
+    card.className = "editor-card";
+
+    const head = document.createElement("div");
+    head.className = "editor-card-head";
+    head.innerHTML = `<span>SLOT ${idx + 1}</span><span>最大3文字×2行</span>`;
+    card.appendChild(head);
+
+    const inputs = document.createElement("div");
+    inputs.className = "editor-inputs";
+
+    const in1 = document.createElement("input");
+    in1.type = "text";
+    in1.maxLength = 3;
+    in1.placeholder = "1行目";
+    in1.value = ic.line1;
+    in1.addEventListener("input", () => {
+      icons[idx].line1 = in1.value.slice(0, 3);
+      saveIcons();
+      renderIconButtons();
+      renderCanvas();
+    });
+
+    const in2 = document.createElement("input");
+    in2.type = "text";
+    in2.maxLength = 3;
+    in2.placeholder = "2行目";
+    in2.value = ic.line2;
+    in2.addEventListener("input", () => {
+      icons[idx].line2 = in2.value.slice(0, 3);
+      saveIcons();
+      renderIconButtons();
+      renderCanvas();
+    });
+
+    const colorIn = document.createElement("input");
+    colorIn.type = "color";
+    colorIn.value = ic.color;
+    colorIn.addEventListener("input", () => {
+      icons[idx].color = colorIn.value;
+      saveIcons();
+      renderIconButtons();
+      renderCanvas();
+    });
+
+    inputs.appendChild(in1);
+    inputs.appendChild(in2);
+    inputs.appendChild(colorIn);
+    card.appendChild(inputs);
+    grid.appendChild(card);
+  });
+}
+
+// ===== HTML5 Canvas 1920x1080 テロップ描画 =====
+const canvas = document.getElementById("terop-canvas");
+const ctx    = canvas.getContext("2d");
+
+function renderCanvas(forceClear = false) {
+  ctx.clearRect(0, 0, W, H);
+  if (forceClear) return;
+
+  const rawText = state.text.trim();
+  if (!rawText) return;
+
+  const lines = state.text
+    .split("\n")
+    .slice(0, MAX_LINES)
+    .map(l => l.slice(0, MAX_CHARS));
+
+  const icon = icons[state.iconIndex] || icons[0];
+  const pos  = POSITIONS[state.position] || POSITIONS["bottom-left"];
+
+  const FONT_STACK = "'Noto Sans JP', 'Yu Gothic UI', 'Meiryo', sans-serif";
+  const BODY_SIZE  = 58;
+  const PAD        = 22;
+  const ICON_W     = 104; // 3文字が余裕をもって収まる幅
+  const ICON_H_PAD = 16;
+  const LINE_H     = 74;
+
+  ctx.font = `900 ${BODY_SIZE}px ${FONT_STACK}`;
+  let maxTextW = 0;
+  for (const line of lines) {
+    const w = ctx.measureText(line).width;
+    if (w > maxTextW) maxTextW = w;
+  }
+
+  const BOX_H = lines.length * LINE_H + PAD * 2;
+  const BOX_W = Math.max(Math.ceil(ICON_W + PAD * 3 + maxTextW + PAD), 420);
+
+  let bx = pos.x;
+  const by = pos.y;
+  if (pos.anchor === "right") {
+    bx = bx - BOX_W;
+  }
+
+  // 1. 背景ボックス（半透明ダーク + 角丸）
+  ctx.save();
+  ctx.beginPath();
+  ctx.roundRect(bx, by, BOX_W, BOX_H, 16);
+  ctx.fillStyle = "rgba(8, 12, 24, 0.84)";
+  ctx.fill();
+
+  // 左端のカラーライン（ボックス角丸でクリップ）
+  ctx.clip();
+  ctx.fillStyle = icon.color;
+  ctx.fillRect(bx, by, 7, BOX_H);
+  ctx.restore();
+
+  // 2. アイキャッチバッジ
+  const ibx = bx + PAD;
+  const iby = by + ICON_H_PAD;
+  const ibh = BOX_H - ICON_H_PAD * 2;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.roundRect(ibx, iby, ICON_W, ibh, 10);
+  ctx.fillStyle = icon.color;
+  ctx.fill();
+
+  // バッジ内テキスト（1行のみ or 2行の自動バランス配置）
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  const centerX = ibx + ICON_W / 2;
+  const centerY = iby + ibh / 2;
+
+  const l1 = (icon.line1 || "").trim();
+  const l2 = (icon.line2 || "").trim();
+
+  if (l1 && l2) {
+    // 2行構成（日本語＋英語、または日本語2行）
+    const isAsciiL2 = /^[\x20-\x7E]+$/.test(l2);
+    const size1 = lines.length === 1 ? 26 : 30;
+    const size2 = isAsciiL2 ? (lines.length === 1 ? 20 : 22) : (lines.length === 1 ? 24 : 28);
+    const offset = lines.length === 1 ? 15 : 18;
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = `900 ${size1}px ${FONT_STACK}`;
+    ctx.fillText(l1, centerX, centerY - offset, ICON_W - 10);
+
+    ctx.fillStyle = isAsciiL2 ? "rgba(255,255,255,0.85)" : "#ffffff";
+    ctx.font = `900 ${size2}px ${FONT_STACK}`;
+    ctx.fillText(l2, centerX, centerY + offset, ICON_W - 10);
+  } else {
+    // 1行のみ構成
+    const single = l1 || l2;
+    const sizeSingle = single.length >= 3 ? 28 : 32;
+    ctx.fillStyle = "#ffffff";
+    ctx.font = `900 ${sizeSingle}px ${FONT_STACK}`;
+    ctx.fillText(single, centerX, centerY, ICON_W - 10);
+  }
+  ctx.restore();
+
+  // 3. 本文テキスト（袋文字：輪郭線 + 白塗り）
+  ctx.save();
+  ctx.font = `900 ${BODY_SIZE}px ${FONT_STACK}`;
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.lineJoin = "round";
+  ctx.miterLimit = 2;
+
+  const tx = bx + PAD + ICON_W + PAD;
+  let ty = by + PAD + LINE_H / 2;
+
+  for (const line of lines) {
+    // 輪郭線
+    ctx.lineWidth = 8;
+    ctx.strokeStyle = "rgba(30, 30, 20, 0.88)";
+    ctx.strokeText(line, tx, ty);
+
+    // 白文字本体
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(line, tx, ty);
+
+    ty += LINE_H;
+  }
+  ctx.restore();
+}
+
+// CanvasからPNG Blobを生成するヘルパー
+function canvasToPngBlob() {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(blob => {
+      if (blob) resolve(blob);
+      else reject(new Error("PNGエンコードに失敗しました"));
+    }, "image/png");
+  });
+}
+
+// ===== ブリッジ通信 =====
+function getBridgeUrl() {
+  return document.getElementById("bridge-url").value.trim().replace(/\/+$/, "");
+}
+
+async function checkBridgeStatus() {
+  const url = getBridgeUrl();
+  const ind = document.getElementById("status-indicator");
+  const txt = document.getElementById("status-text");
+
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 2000);
+    const res = await fetch(`${url}/status`, { signal: controller.signal });
+    clearTimeout(timer);
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    state.bridgeOk  = true;
+    state.atemReady = Boolean(data.atemConnected);
+
+    if (state.atemReady) {
+      ind.className = "ok";
+      txt.textContent = `ATEM接続済 (${data.atemIp || "LAN"})`;
+    } else {
+      ind.className = "warn";
+      txt.textContent = "ブリッジ起動済 / ATEM待機中";
+    }
+  } catch (e) {
+    state.bridgeOk  = false;
+    state.atemReady = false;
+    ind.className = "err";
+    txt.textContent = "単体モード (ブリッジ未接続)";
+  }
+}
+
+async function postPngToBridge(blob, actionLabel) {
+  const url = getBridgeUrl();
+  const res = await fetch(`${url}/upload`, {
+    method: "POST",
+    headers: { "Content-Type": "image/png" },
+    body: blob,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.success) {
+    throw new Error(data.error || `送信エラー (HTTP ${res.status})`);
+  }
+  addLog("ok", `${actionLabel} → ATEMスロット${data.slot ?? 0}へ転送完了`);
+}
+
+// ===== イベントリスナー設定 =====
+const textarea   = document.getElementById("terop-text");
+const line1count = document.getElementById("line1-count");
+const line2count = document.getElementById("line2-count");
+
+textarea.addEventListener("input", () => {
+  const parts = textarea.value.split("\n");
+  if (parts.length > MAX_LINES) {
+    textarea.value = parts.slice(0, MAX_LINES).join("\n");
+  }
+  const lines = textarea.value.split("\n");
+  const l1 = (lines[0] || "").length;
+  const l2 = (lines[1] || "").length;
+
+  line1count.textContent = `1行目: ${l1}/${MAX_CHARS}`;
+  line1count.className   = l1 > MAX_CHARS ? "warn" : "";
+  line2count.textContent = `2行目: ${l2}/${MAX_CHARS}`;
+  line2count.className   = l2 > MAX_CHARS ? "warn" : "";
+
+  state.text = textarea.value;
+  renderCanvas();
+});
+
+// Ctrl+Enter で即座に送出
+textarea.addEventListener("keydown", (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+    e.preventDefault();
+    document.getElementById("btn-send").click();
+  }
+});
+
+// 配置選択
+document.querySelectorAll(".pos-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".pos-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    state.position = btn.dataset.pos;
+    renderCanvas();
+  });
+});
+
+// アイキャッチ編集ドロワー開閉
+const btnToggleEditor = document.getElementById("btn-toggle-editor");
+const iconEditor      = document.getElementById("icon-editor");
+btnToggleEditor.addEventListener("click", () => {
+  const isOpen = iconEditor.classList.toggle("open");
+  btnToggleEditor.classList.toggle("active", isOpen);
+  btnToggleEditor.textContent = isOpen ? "✓ 編集完了" : "⚙ ラベル編集";
+});
+
+// アイキャッチ初期値リセット
+document.getElementById("btn-reset-icons").addEventListener("click", () => {
+  icons = JSON.parse(JSON.stringify(DEFAULT_ICONS));
+  saveIcons();
+  renderIconButtons();
+  renderIconEditor();
+  renderCanvas();
+  addLog("warn", "アイキャッチを初期値に戻しました");
+});
+
+// 送出ボタン
+document.getElementById("btn-send").addEventListener("click", async () => {
+  if (!state.text.trim()) {
+    addLog("err", "テキストが入力されていません");
+    return;
+  }
+  const btn = document.getElementById("btn-send");
+  btn.classList.add("sending");
+  btn.textContent = "送出中…";
+
+  try {
+    renderCanvas(false);
+    const blob = await canvasToPngBlob();
+    const ic = icons[state.iconIndex];
+    const labelStr = [ic.line1, ic.line2].filter(Boolean).join("/");
+    const summary = `[${state.position} | ${labelStr}] "${state.text.replace(/\n/g, " / ")}"`;
+
+    await postPngToBridge(blob, `送出 ${summary}`);
+    checkBridgeStatus();
+  } catch (e) {
+    addLog("err", `送出失敗: ${e.message}（単体利用時は「PNG保存」を使用してください）`);
+    checkBridgeStatus();
+  } finally {
+    btn.classList.remove("sending");
+    btn.textContent = "送 出！";
+  }
+});
+
+// PNG保存ボタン（Cloudflare単体利用や事前素材作成用）
+document.getElementById("btn-download").addEventListener("click", async () => {
+  if (!state.text.trim()) {
+    addLog("err", "テキストが入力されていません");
+    return;
+  }
+  try {
+    renderCanvas(false);
+    const blob = await canvasToPngBlob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const ts = new Date().toISOString().replace(/[-:T]/g, "").slice(0, 14);
+    a.href = url;
+    a.download = `terop_${ts}.png`;
+    a.click();
+    URL.revokeObjectURL(url);
+    addLog("ok", `PNGファイルを保存しました (terop_${ts}.png)`);
+  } catch (e) {
+    addLog("err", `PNG保存エラー: ${e.message}`);
+  }
+});
+
+// クリアボタン（透明PNGを送出してATEM側を消去）
+document.getElementById("btn-clear").addEventListener("click", async () => {
+  try {
+    renderCanvas(true);
+    const blob = await canvasToPngBlob();
+    await postPngToBridge(blob, "クリア（透明PNG送出）");
+    // プレビュー表示は現在の入力状態に戻しておく
+    renderCanvas(false);
+  } catch (e) {
+    renderCanvas(false);
+    addLog("err", `クリア失敗: ${e.message}`);
+  }
+});
+
+// ブリッジURL保存・再確認
+const bridgeInput = document.getElementById("bridge-url");
+const savedBridge = localStorage.getItem(STORAGE_KEY_BRIDGE);
+if (savedBridge) bridgeInput.value = savedBridge;
+
+bridgeInput.addEventListener("change", () => {
+  localStorage.setItem(STORAGE_KEY_BRIDGE, bridgeInput.value.trim());
+  checkBridgeStatus();
+});
+document.getElementById("btn-check-bridge").addEventListener("click", checkBridgeStatus);
+
+// ログ出力
+function addLog(type, msg) {
+  const log = document.getElementById("log");
+  if (log.textContent === "—") log.innerHTML = "";
+  const ts  = new Date().toTimeString().slice(0, 8);
+  const div = document.createElement("div");
+  div.innerHTML = `<span class="log-ts">${ts}</span><span class="log-${type}">${escapeHtml(msg)}</span>`;
+  log.prepend(div);
+  while (log.children.length > 30) log.removeChild(log.lastChild);
+}
+
+function escapeHtml(str) {
+  return str.replace(/[&<>"']/g, m => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[m]));
+}
+
+// ===== 初期化 =====
+renderIconButtons();
+renderIconEditor();
+renderCanvas();
+checkBridgeStatus();
+setInterval(checkBridgeStatus, 10000);
+</script>
+</body>
+</html>
