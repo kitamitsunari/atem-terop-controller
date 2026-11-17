@@ -32,7 +32,7 @@ atem-terop-controller/
 ├── terop_pusher.exe    # 起動・Web配信・ATEM転送を担う単体実行ファイル（必須・約22MB）
 └── terop_maker.html    # テロップ作成UI（任意：同梱時はローカル完結、省略時は [https://aterop.mkita.com](https://aterop.mkita.com) を使用）
 ```
-## 開発クレジット
+## 謝辞・開発クレジット (Acknowledgments & Credits)
 
-- **初期プロトタイプ設計・着手:** Claude
-- **Node.js SEA 単体バイナリ化・最適化・UI改修（最新版）:** Gemini
+- **ATEM 通信・転送ライブラリ:** 本ツールの ATEM スイッチャーとの接続およびメディアプールへの画像転送機能は、優れたオープンソースライブラリである **[atem-connection](https://github.com/nrkno/tv-automation-atem-connection)**（NRK / Sofie TV Automation プロジェクト）に支えられています。開発者・コントリビューターの皆様に深く感謝いたします。
+- **開発プロセス:** 初期プロトタイプの設計・着手は **Claude** にて行い、Node.js SEA による単体実行ファイル化（UPX圧縮）およびハイブリッドUIを含む最新版の実装・最適化は **Gemini** とともに制作しました。
